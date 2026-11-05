@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پشکنەری راستەوخۆی CG - رووداو</title>
+    <title>پشکنەری CG - رووداو</title>
     <style>
         * {
             box-sizing: border-box;
@@ -21,14 +21,13 @@
             flex-direction: column;
         }
 
-        /* بەشی سەرەوە */
         .top-bar {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             z-index: 20;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(8px);
             padding: 10px 16px;
             display: flex;
@@ -38,7 +37,7 @@
         }
 
         .top-bar h1 {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #38bdf8;
         }
 
@@ -46,14 +45,13 @@
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid #475569;
             color: #fff;
-            padding: 4px 8px;
+            padding: 5px 8px;
             border-radius: 6px;
             font-size: 0.8rem;
             width: 140px;
             direction: ltr;
         }
 
-        /* کامێرا بە پڕی شاشە */
         .camera-container {
             position: relative;
             flex: 1;
@@ -71,7 +69,6 @@
             object-fit: cover;
         }
 
-        /* چوارچێوەی ئامانج بۆ تێکستی CG */
         .scanner-frame {
             position: absolute;
             width: 85%;
@@ -93,7 +90,6 @@
             border-radius: 20px;
         }
 
-        /* کارتی ئەنجام لە خوارەوە */
         .bottom-card {
             position: absolute;
             bottom: 20px;
@@ -182,7 +178,7 @@
 <body>
 
     <div class="top-bar">
-        <h1>پشکنەری راستەوخۆ - رووداو</h1>
+        <h1>پشکنەری رووداو (v2.0)</h1>
         <input type="password" id="apiKey" class="api-input" placeholder="Gemini API Key..." onchange="saveKey()">
     </div>
 
@@ -210,6 +206,7 @@
     let isScanning = false;
     let isProcessing = false;
     let videoStream = null;
+    let detectedModel = null; // مۆدێلی دۆزراوە بۆ کلیلەکەت
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const btnToggle = document.getElementById('btnToggle');
@@ -227,6 +224,7 @@
     function saveKey() {
         const key = document.getElementById("apiKey").value.trim();
         localStorage.setItem("rudaw_gemini_api_key", key);
+        detectedModel = null; // دووبارە دۆزینەوەی مۆدێل بە کلیلە نوێیەکە
     }
 
     async function initCamera() {
@@ -243,7 +241,38 @@
         }
     }
 
-    function toggleScanner() {
+    // دۆزینەوەی ئۆتۆماتیکی ئەو مۆدێلە فەرمییەی بۆ کلیلەکەت کاردەکات
+    async function getWorkingModel(apiKey) {
+        if (detectedModel) return detectedModel;
+
+        statusBadge.innerText = "دۆزینەوەی مۆدێل...";
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            const data = await res.json();
+            
+            if (data.models && data.models.length > 0) {
+                // گەڕان بەدوای مۆدێلێکی گونجاو (وەک 2.5, 2.0, یان flash)
+                const suitable = data.models.find(m => 
+                    m.supportedGenerationMethods && 
+                    m.supportedGenerationMethods.includes('generateContent') &&
+                    (m.name.includes('flash') || m.name.includes('gemini'))
+                );
+
+                if (suitable) {
+                    detectedModel = suitable.name.replace('models/', '');
+                    return detectedModel;
+                }
+            }
+        } catch (e) {
+            console.error("نەتوانرا مۆدێلەکان بهێنرێن:", e);
+        }
+
+        // ئەگەر لیستی مۆدێلەکان نەهاتن، ئەمە بەکاردێت:
+        detectedModel = 'gemini-2.0-flash';
+        return detectedModel;
+    }
+
+    async function toggleScanner() {
         const apiKey = document.getElementById("apiKey").value.trim();
         if (!apiKey) {
             alert("تکایە سەرەتا کلیلی API لە سەرەوە بنووسە!");
@@ -274,17 +303,20 @@
             try {
                 const base64Image = captureFrame();
                 const apiKey = document.getElementById("apiKey").value.trim();
-                const result = await callGeminiFlash(apiKey, base64Image);
+                const result = await callGemini(apiKey, base64Image);
                 const cleaned = postProcessText(result);
                 displayLiveResult(cleaned);
             } catch (error) {
                 resultText.innerText = error.message;
+                // ئەگەر کێشەی نادۆزرانەوە بوو، ڕێنمایی VPN پیشان دەدات
+                if (error.message.includes("not found")) {
+                    resultText.innerText += "\n\n⚠️ تێبینی: تکایە VPN لەسەر مۆبایلەکەت پێبکە و دووبارە تاقی بکەرەوە (لە عێراق گووگڵ پێویستی بە VPN دەبێت).";
+                }
             } finally {
                 isProcessing = false;
             }
         }
 
-        // پشکنینی دووبارە پاش 1.5 چرکە
         if (isScanning) {
             setTimeout(runScannerLoop, 1500);
         }
@@ -298,8 +330,9 @@
         return canvas.toDataURL('image/jpeg', 0.65).split(',')[1];
     }
 
-    // پەیوەندی بە مۆدێلە نوێیەکانی گووگڵ (بە پاڵپشتی ئۆتۆماتیکی بۆ نوێترین مۆدێل)
-    async function callGeminiFlash(apiKey, base64Image) {
+    async function callGemini(apiKey, base64Image) {
+        const modelName = await getWorkingModel(apiKey);
+
         const systemPrompt = `تۆ پشکنەری رێنووسی زمانی کوردی سۆرانییت لە کەناڵی "رووداو".
 کارەکەت بریتییە لە دۆزینەوەی هەڵەی رێنووسی لەسەر تێکستی CG.
 
@@ -315,47 +348,24 @@
 ئەگەر هەڵەی تێدابوو:
 هەڵە: (وشە هەڵەکە) ⬅️ (وشە دروستەکە بەپێی رووداو)`;
 
-        // لیستی مۆدێلە نوێیەکان بەپێی ئەپدەیت (ئەگەر یەکیان 404 بوو ئەوی تر تاقی دەکاتەوە)
-        const models = [
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-2.0-flash-exp',
-            'gemini-1.5-flash-latest'
-        ];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-        let lastErr = null;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [
+                        { text: systemPrompt },
+                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                    ]
+                }]
+            })
+        });
 
-        for (const model of models) {
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: systemPrompt },
-                                { inlineData: { mimeType: "image/jpeg", data: base64Image } }
-                            ]
-                        }]
-                    })
-                });
-
-                const data = await res.json();
-                if (data.error) {
-                    lastErr = new Error(data.error.message);
-                    continue; // بچۆ بۆ مۆدێلی دواتر
-                }
-
-                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-            } catch (e) {
-                lastErr = e;
-            }
-        }
-
-        throw lastErr || new Error("مۆدێلەکە وەڵامی نەدایەوە، تکایە کلیلەکەت چێک بکە.");
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.candidates[0].content.parts[0].text;
     }
 
     function postProcessText(text) {
