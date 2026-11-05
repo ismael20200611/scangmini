@@ -1,388 +1,534 @@
 <!DOCTYPE html>
 <html lang="ckb" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پشکنەری CG - رووداو</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background-color: #000;
-            color: #fff;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .top-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 20;
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(8px);
-            padding: 10px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .top-bar h1 {
-            font-size: 0.9rem;
-            color: #38bdf8;
-        }
-
-        .api-input {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #475569;
-            color: #fff;
-            padding: 5px 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            width: 140px;
-            direction: ltr;
-        }
-
-        .camera-container {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .scanner-frame {
-            position: absolute;
-            width: 85%;
-            height: 35%;
-            border: 2px dashed #38bdf8;
-            border-radius: 12px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .scanner-frame span {
-            background: rgba(0, 0, 0, 0.6);
-            color: #94a3b8;
-            font-size: 0.8rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
-
-        .bottom-card {
-            position: absolute;
-            bottom: 20px;
-            left: 16px;
-            right: 16px;
-            z-index: 20;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 14px;
-            padding: 14px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-            border: 2px solid #334155;
-            transition: all 0.3s ease;
-        }
-
-        .status-clean {
-            border-color: #10b981 !important;
-            background: rgba(6, 78, 59, 0.95) !important;
-        }
-
-        .status-error {
-            border-color: #ef4444 !important;
-            background: rgba(127, 29, 29, 0.95) !important;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .badge {
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .pulse-dot {
-            width: 10px;
-            height: 10px;
-            background-color: #38bdf8;
-            border-radius: 50%;
-            animation: pulse 1.2s infinite;
-        }
-
-        .result-text {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .btn-live {
-            background: #0284c7;
-            color: white;
-        }
-
-        .btn-live.active {
-            background: #ef4444;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.5; }
-            50% { transform: scale(1.3); opacity: 1; }
-            100% { transform: scale(0.95); opacity: 0.5; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#080d1b">
+  <title>پشکنەری راستەوخۆی CG - رووداو</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --blue: #38bdf8;
+      --panel: rgba(15, 23, 42, .96);
+      --border: #334155;
+      --muted: #a7b4c8;
+      --red: #ef4444;
+      --green: #10b981;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    button, input { font: inherit; }
+    .top-bar {
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: 5;
+      min-height: 72px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(15, 23, 42, .96);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+    }
+    .top-bar h1 { margin: 0; color: var(--blue); font-size: clamp(14px, 3.6vw, 20px); }
+    .api-input {
+      width: min(43vw, 230px);
+      min-width: 125px;
+      padding: 10px 12px;
+      color: #fff;
+      background: #080d1b;
+      border: 1px solid #64748b;
+      border-radius: 9px;
+      direction: ltr;
+      outline: none;
+    }
+    .api-input:focus { border-color: var(--blue); }
+    .camera-container {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #050505;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .scanner-frame {
+      position: absolute;
+      width: 85%;
+      height: 35%;
+      max-height: 360px;
+      border: 2px dashed var(--blue);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.48);
+      pointer-events: none;
+      display: grid;
+      place-items: center;
+    }
+    .scanner-frame span {
+      max-width: 85%;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: rgba(0,0,0,.72);
+      color: #e2e8f0;
+      font-size: 13px;
+      text-align: center;
+    }
+    .bottom-card {
+      position: absolute;
+      z-index: 6;
+      left: 16px;
+      right: 16px;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      max-height: 43vh;
+      overflow: auto;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 8px 30px rgba(0,0,0,.7);
+      backdrop-filter: blur(12px);
+      transition: border-color .2s, background .2s;
+    }
+    .bottom-card.status-clean { border-color: var(--green); background: rgba(6,78,59,.97); }
+    .bottom-card.status-error { border-color: var(--red); background: rgba(75,20,28,.97); }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+    .badge { font-size: clamp(17px, 4.5vw, 23px); font-weight: 800; }
+    .pulse-dot {
+      flex: 0 0 12px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--blue);
+      animation: pulse 1.2s infinite;
+    }
+    .result-text {
+      font-size: clamp(14px, 3.7vw, 18px);
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 150px;
+      overflow-y: auto;
+      color: #f8fafc;
+    }
+    .controls { display: flex; gap: 10px; margin-top: 14px; }
+    .btn {
+      flex: 1;
+      min-height: 52px;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      background: #0284c7;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn.active { background: var(--red); }
+    .small-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(.9); opacity: .55; }
+      50% { transform: scale(1.25); opacity: 1; }
+    }
+    @media (max-height: 700px) {
+      .bottom-card { max-height: 39vh; padding: 12px; }
+      .result-text { max-height: 95px; }
+      .btn { min-height: 44px; }
+    }
+  </style>
 </head>
 <body>
+  <header class="top-bar">
+    <h1>پشکنەری راستەوخۆ - رووداو</h1>
+    <input
+      type="password"
+      id="apiKey"
+      class="api-input"
+      placeholder="Gemini API Key"
+      aria-label="Gemini API Key"
+      autocomplete="off"
+      spellcheck="false"
+    >
+  </header>
 
-    <div class="top-bar">
-        <h1>پشکنەری رووداو (v2.0)</h1>
-        <input type="password" id="apiKey" class="api-input" placeholder="Gemini API Key..." onchange="saveKey()">
+  <main class="camera-container">
+    <video id="video" playsinline autoplay muted></video>
+    <div class="scanner-frame">
+      <span>تێکستی CG بخەرە ناو ئەم چوارچێوەیە</span>
     </div>
+  </main>
 
-    <div class="camera-container">
-        <video id="video" playsinline autoplay muted></video>
-        <div class="scanner-frame">
-            <span>تێکستی CG بخەرە ئەم چوارچێوەیە</span>
-        </div>
+  <section class="bottom-card" id="bottomCard" aria-live="polite">
+    <div class="card-header">
+      <span class="badge" id="statusBadge">چاوەڕوانی کامێرا...</span>
+      <span class="pulse-dot" id="pulseDot" hidden></span>
     </div>
-
-    <div class="bottom-card" id="bottomCard">
-        <div class="card-header">
-            <span class="badge" id="statusBadge">چاوەڕوانی کامێرا...</span>
-            <div class="pulse-dot" id="pulseDot" style="display: none;"></div>
-        </div>
-        <div class="result-text" id="resultText">مۆبایلەکەت بەرامبەر تێکستی CG ڕابگرە.</div>
-        <div class="controls">
-            <button class="btn btn-live" id="btnToggle" onclick="toggleScanner()">دەستپێکردنی پشکنینی راستەوخۆ</button>
-        </div>
+    <div class="result-text" id="resultText">مۆبایلەکەت بەرامبەر تێکستی CG ڕابگرە. کلیلی Gemini بنووسە و پاشان پشکنین دەست پێ بکە.</div>
+    <div class="controls">
+      <button class="btn" id="btnToggle" type="button">دەستپێکردنی پشکنینی راستەوخۆ</button>
     </div>
+    <p class="small-note">تێبینی: کامێرا تەنها لە HTTPS یان localhost کار دەکات. کلیلی API لەم وەشانەدا تەنها لە هەمان پەڕەدا بەکاردێت و لە localStorage پاشەکەوت ناکرێت.</p>
+  </section>
 
-    <canvas id="canvas" style="display: none;"></canvas>
+  <canvas id="canvas" hidden></canvas>
 
 <script>
-    let isScanning = false;
-    let isProcessing = false;
-    let videoStream = null;
-    let detectedModel = null; // مۆدێلی دۆزراوە بۆ کلیلەکەت
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const btnToggle = document.getElementById('btnToggle');
-    const statusBadge = document.getElementById('statusBadge');
-    const resultText = document.getElementById('resultText');
-    const bottomCard = document.getElementById('bottomCard');
-    const pulseDot = document.getElementById('pulseDot');
+(() => {
+  "use strict";
 
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedKey = localStorage.getItem("rudaw_gemini_api_key");
-        if (savedKey) document.getElementById("apiKey").value = savedKey;
-        initCamera();
-    });
+  const API_ROOT = "https://generativelanguage.googleapis.com/v1beta";
+  const MODEL_PREFERENCE = [
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash"
+  ];
+  const SCAN_INTERVAL_MS = 2500;
 
-    function saveKey() {
-        const key = document.getElementById("apiKey").value.trim();
-        localStorage.setItem("rudaw_gemini_api_key", key);
-        detectedModel = null; // دووبارە دۆزینەوەی مۆدێل بە کلیلە نوێیەکە
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const apiKeyInput = document.getElementById("apiKey");
+  const btnToggle = document.getElementById("btnToggle");
+  const statusBadge = document.getElementById("statusBadge");
+  const resultText = document.getElementById("resultText");
+  const bottomCard = document.getElementById("bottomCard");
+  const pulseDot = document.getElementById("pulseDot");
+
+  let isScanning = false;
+  let isProcessing = false;
+  let videoStream = null;
+  let scanTimer = null;
+  let selectedModel = null;
+  let lastResult = "";
+
+  const systemPrompt = `
+تۆ پشکنەری وردی ڕێنووسی زمانی کوردی سۆرانی بۆ تێکستی گرافیکی کەناڵی رووداو (CG)یت.
+
+ئەرک:
+- تەنها ئەو دەقە بخوێنەوە کە لە وێنەکەدا بە ڕوونی دیارە.
+- هەڵەی ڕێنووس، پیتی عەرەبی لە جیاتی پیتی کوردی، و هەڵەی ڕوونی ڕێزمانی بدۆزەرەوە.
+- شێوازی نووسینی رووداو بپارێزە؛ بۆ نموونە «رووداو» بە (ر) دەنووسرێت.
+- دەقێک کە ناخوێندرێتەوە مەخەمڵێنە و هەڵەی بۆ دروست مەکە.
+- ناوی کەس، شوێن، دامەزراوە و زاراوەی تایبەت بەبێ دڵنیایی مەگۆڕە.
+- ئەگەر وشەیەک دروستە، بە هۆی جیاوازیی شێوازەوە هەڵەی مەژمێرە.
+- ئەگەر تەنها بەشێک لە دەقەکە دیارە، تەنها هەمان بەش هەڵبسەنگێنە.
+
+شێوازی وەڵام:
+ئەگەر هیچ هەڵەیەکی دڵنیا نەبوو:
+«سەدی سەد دروستە ✅»
+
+ئەگەر هەڵە هەبوو، هەر هەڵەیەک لە هێڵێکی جیاواز:
+«هەڵە: [وشەی دیاریکراو] ← [شێوەی دروست]»
+لە کۆتاییدا ئەگەر پێویست بوو ڕوونکردنەوەیەکی زۆر کورت زیاد بکە.
+
+وەڵامەکە بە کوردی سۆرانی و کورت بێت. هیچ دەقێکی نادیار مەخەمڵێنە.
+  `.trim();
+
+  function setStatus(message, state = "normal") {
+    statusBadge.textContent = message;
+    bottomCard.classList.remove("status-clean", "status-error");
+    if (state === "clean") bottomCard.classList.add("status-clean");
+    if (state === "error") bottomCard.classList.add("status-error");
+  }
+
+  function showError(message) {
+    setStatus("کێشەیەک هەیە ⚠️", "error");
+    resultText.textContent = message;
+  }
+
+  async function fetchJson(url, options = {}, timeoutMs = 20000) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const apiMessage = data?.error?.message || `HTTP ${response.status}`;
+        const error = new Error(apiMessage);
+        error.status = response.status;
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("کاتی چاوەڕوانی تەواو بوو. تکایە پەیوەندی ئینتەرنێت بپشکنە و دووبارە هەوڵ بدە.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function explainApiError(error) {
+    const message = String(error?.message || error);
+    if (/API key not valid|invalid api key|API_KEY_INVALID/i.test(message)) {
+      return "کلیلی Gemini API هەڵەیە. کلیلی دروست لە Google AI Studio بەکاربهێنە.";
+    }
+    if (/quota|rate.?limit|RESOURCE_EXHAUSTED/i.test(message)) {
+      return "سنووری بەکارهێنان یان داواکارییەکانت پڕ بووە. چەند چرکەیەک چاوەڕێ بکە و دووبارە هەوڵ بدە.";
+    }
+    if (/not found|NOT_FOUND|does not exist/i.test(message)) {
+      return "مۆدێلی هەڵبژێردراو بەردەست نییە بۆ ئەم API Key ـە. لیستی مۆدێلە بەردەستەکان دووبارە پشکنین دەکرێت.";
+    }
+    if (/PERMISSION_DENIED|permission/i.test(message)) {
+      return "ئەم کلیلی API ـە دەسەڵاتی ئەم داواکارییەی نییە. ڕێکخستنی API Key و دەستگەیشتنی Gemini API بپشکنە.";
+    }
+    if (/Failed to fetch|NetworkError|fetch/i.test(message)) {
+      return "پەیوەندی بە Gemini API نەکرا. ئینتەرنێت، ڕێکخستنی وێبگەڕ و ڕێگەپێدانی API بپشکنە.";
+    }
+    return message;
+  }
+
+  async function getAvailableModelNames(apiKey) {
+    const data = await fetchJson(`${API_ROOT}/models?key=${encodeURIComponent(apiKey)}`);
+    return (data.models || [])
+      .filter(model =>
+        Array.isArray(model.supportedGenerationMethods) &&
+        model.supportedGenerationMethods.includes("generateContent")
+      )
+      .map(model => String(model.name || "").replace(/^models\//, ""));
+  }
+
+  async function chooseModel(apiKey) {
+    if (selectedModel) return selectedModel;
+
+    let availableNames = [];
+    try {
+      availableNames = await getAvailableModelNames(apiKey);
+    } catch (error) {
+      // If listing is unavailable, try the current documented stable model below.
+      console.warn("Model listing failed:", error.message);
     }
 
-    async function initCamera() {
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
-                audio: false
-            });
-            video.srcObject = videoStream;
-            statusBadge.innerText = "ئامادەیە بۆ پشکنین";
-        } catch (err) {
-            statusBadge.innerText = "هەڵە لە کامێرا";
-            resultText.innerText = "تکایە ڕێگە بە کامێرا بدە لە وێبگەڕەکەتدا.";
+    const usableNames = availableNames.filter(name =>
+      /flash/i.test(name) &&
+      !/(image|tts|live|transcribe|embedding|robotics|computer-use)/i.test(name)
+    );
+
+    for (const preferred of MODEL_PREFERENCE) {
+      if (usableNames.includes(preferred)) {
+        selectedModel = preferred;
+        return selectedModel;
+      }
+    }
+
+    if (usableNames.length) {
+      selectedModel = usableNames[0];
+      return selectedModel;
+    }
+
+    // Current documented stable fallback. If unavailable for this key/project,
+    // the API error is shown clearly instead of silently retrying an obsolete model.
+    selectedModel = "gemini-3.8-flash";
+    return selectedModel;
+  }
+
+  async function initCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError("کامێرا لەم وێبگەڕەدا بەردەست نییە. پەڕەکە لە HTTPS یان localhost بکەرەوە و وێبگەڕێکی نوێ بەکاربهێنە.");
+      return;
+    }
+
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
+      });
+      video.srcObject = videoStream;
+      await video.play();
+      setStatus("ئامادەیە بۆ پشکنین");
+      resultText.textContent = "مۆبایلەکەت بەرامبەر تێکستی CG ڕابگرە، کلیلی Gemini بنووسە و پشکنین دەست پێ بکە.";
+    } catch (error) {
+      let message = "نەتوانرا کامێرا بکرێتەوە. ڕێگەپێدانی کامێرا لە وێبگەڕەکەتدا چالاک بکە.";
+      if (error.name === "NotAllowedError") message = "ڕێگەپێدانی کامێرا ڕەتکرایەوە. لە ڕێکخستنی وێبگەڕەکەتدا ڕێگە بە کامێرا بدە.";
+      if (error.name === "NotFoundError") message = "هیچ کامێرایەک نەدۆزرایەوە لەم ئامێرەدا.";
+      if (error.name === "NotReadableError") message = "کامێرا لەلایەن ئەپێکی ترەوە بەکاردەهێنرێت. ئەو ئەپە دابخە و دووبارە هەوڵ بدە.";
+      showError(message);
+    }
+  }
+
+  function captureFrame() {
+    if (!videoStream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        !video.videoWidth || !video.videoHeight) {
+      throw new Error("وێنەی کامێرا ئامادە نییە. چەند چرکەیەک چاوەڕێ بکە.");
     }
 
-    // دۆزینەوەی ئۆتۆماتیکی ئەو مۆدێلە فەرمییەی بۆ کلیلەکەت کاردەکات
-    async function getWorkingModel(apiKey) {
-        if (detectedModel) return detectedModel;
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const cropWidth = sourceWidth * 0.85;
+    const cropHeight = sourceHeight * 0.35;
+    const sx = (sourceWidth - cropWidth) / 2;
+    const sy = (sourceHeight - cropHeight) / 2;
 
-        statusBadge.innerText = "دۆزینەوەی مۆدێل...";
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-            const data = await res.json();
-            
-            if (data.models && data.models.length > 0) {
-                // گەڕان بەدوای مۆدێلێکی گونجاو (وەک 2.5, 2.0, یان flash)
-                const suitable = data.models.find(m => 
-                    m.supportedGenerationMethods && 
-                    m.supportedGenerationMethods.includes('generateContent') &&
-                    (m.name.includes('flash') || m.name.includes('gemini'))
-                );
+    canvas.width = 960;
+    canvas.height = Math.round(960 * cropHeight / cropWidth);
+    const context = canvas.getContext("2d", { willReadFrequently: false });
+    context.drawImage(video, sx, sy, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.82).split(",")[1];
+  }
 
-                if (suitable) {
-                    detectedModel = suitable.name.replace('models/', '');
-                    return detectedModel;
-                }
-            }
-        } catch (e) {
-            console.error("نەتوانرا مۆدێلەکان بهێنرێن:", e);
+  async function callGemini(apiKey, base64Image) {
+    const modelName = await chooseModel(apiKey);
+    const url = `${API_ROOT}/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const data = await fetchJson(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          role: "user",
+          parts: [
+            { text: systemPrompt },
+            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 500
         }
+      })
+    }, 30000);
 
-        // ئەگەر لیستی مۆدێلەکان نەهاتن، ئەمە بەکاردێت:
-        detectedModel = 'gemini-2.0-flash';
-        return detectedModel;
+    const candidate = data?.candidates?.[0];
+    const text = candidate?.content?.parts
+      ?.map(part => part.text || "")
+      .join("")
+      .trim();
+
+    if (!text) {
+      const reason = candidate?.finishReason || data?.promptFeedback?.blockReason || "وەڵامی بەتاڵ";
+      throw new Error(`Gemini وەڵامێکی دەقی نەگەڕاندەوە (${reason}).`);
+    }
+    return text;
+  }
+
+  function postProcessText(text) {
+    // Preserve Rudaw's preferred initial ر in common words; do not globally
+    // replace every Kurdish letter because that can damage valid words.
+    return String(text)
+      .replace(/ي/g, "ی")
+      .replace(/ك/g, "ک")
+      .replace(/ۀ/g, "ە")
+      .trim();
+  }
+
+  function displayLiveResult(text) {
+    resultText.textContent = text;
+    const isClean = text.includes("سەدی سەد دروستە") || text.includes("✅");
+    setStatus(isClean ? "سەدی سەد دروستە ✅" : "هەڵە یان پێداچوونەوە هەیە ⚠️", isClean ? "clean" : "error");
+  }
+
+  async function scanOnce() {
+    if (!isScanning || isProcessing) return;
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      stopScanner();
+      showError("سەرەتا کلیلی Gemini API لە خانەی سەرەوە بنووسە.");
+      apiKeyInput.focus();
+      return;
     }
 
-    async function toggleScanner() {
-        const apiKey = document.getElementById("apiKey").value.trim();
-        if (!apiKey) {
-            alert("تکایە سەرەتا کلیلی API لە سەرەوە بنووسە!");
-            return;
-        }
+    isProcessing = true;
+    setStatus("خەریکی پشکنینە...");
+    try {
+      const imageData = captureFrame();
+      const result = postProcessText(await callGemini(apiKey, imageData));
+      if (result && result !== lastResult) {
+        lastResult = result;
+        displayLiveResult(result);
+      } else if (result) {
+        setStatus("پشکنین بەردەوامە...");
+      }
+    } catch (error) {
+      console.error(error);
+      const message = explainApiError(error);
+      resultText.textContent = message;
+      setStatus("هەڵە لە پشکنین ⚠️", "error");
 
-        isScanning = !isScanning;
-        if (isScanning) {
-            btnToggle.innerText = "وەستاندنی پشکنین";
-            btnToggle.classList.add("active");
-            pulseDot.style.display = "block";
-            runScannerLoop();
-        } else {
-            btnToggle.innerText = "دەستپێکردنی پشکنینی راستەوخۆ";
-            btnToggle.classList.remove("active");
-            pulseDot.style.display = "none";
-            statusBadge.innerText = "وەستێنراوە";
-        }
+      // Stop on authentication/model errors. Keep scanning for temporary network
+      // or quota errors so the user can recover without restarting manually.
+      if (/API Key|کلیلی|مۆدێلی هەڵبژێردراو|دەسەڵاتی/i.test(message)) {
+        stopScanner();
+      }
+    } finally {
+      isProcessing = false;
+      if (isScanning) scanTimer = setTimeout(scanOnce, SCAN_INTERVAL_MS);
+    }
+  }
+
+  function startScanner() {
+    if (!videoStream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      showError("کامێرا هێشتا ئامادە نییە. تکایە چەند چرکەیەک چاوەڕێ بکە.");
+      return;
+    }
+    if (!apiKeyInput.value.trim()) {
+      showError("سەرەتا کلیلی Gemini API لە خانەی سەرەوە بنووسە.");
+      apiKeyInput.focus();
+      return;
     }
 
-    async function runScannerLoop() {
-        if (!isScanning) return;
+    isScanning = true;
+    lastResult = "";
+    btnToggle.textContent = "وەستاندنی پشکنین";
+    btnToggle.classList.add("active");
+    pulseDot.hidden = false;
+    selectedModel = null;
+    scanOnce();
+  }
 
-        if (!isProcessing) {
-            isProcessing = true;
-            statusBadge.innerText = "خەریکی پشکنینە...";
-            
-            try {
-                const base64Image = captureFrame();
-                const apiKey = document.getElementById("apiKey").value.trim();
-                const result = await callGemini(apiKey, base64Image);
-                const cleaned = postProcessText(result);
-                displayLiveResult(cleaned);
-            } catch (error) {
-                resultText.innerText = error.message;
-                // ئەگەر کێشەی نادۆزرانەوە بوو، ڕێنمایی VPN پیشان دەدات
-                if (error.message.includes("not found")) {
-                    resultText.innerText += "\n\n⚠️ تێبینی: تکایە VPN لەسەر مۆبایلەکەت پێبکە و دووبارە تاقی بکەرەوە (لە عێراق گووگڵ پێویستی بە VPN دەبێت).";
-                }
-            } finally {
-                isProcessing = false;
-            }
-        }
+  function stopScanner() {
+    isScanning = false;
+    clearTimeout(scanTimer);
+    btnToggle.textContent = "دەستپێکردنی پشکنینی راستەوخۆ";
+    btnToggle.classList.remove("active");
+    pulseDot.hidden = true;
+    if (!isProcessing) setStatus("پشکنین وەستێنرا");
+  }
 
-        if (isScanning) {
-            setTimeout(runScannerLoop, 1500);
-        }
-    }
+  btnToggle.addEventListener("click", () => {
+    if (isScanning) stopScanner();
+    else startScanner();
+  });
 
-    function captureFrame() {
-        const ctx = canvas.getContext('2d');
-        canvas.width = 640;
-        canvas.height = 360;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        return canvas.toDataURL('image/jpeg', 0.65).split(',')[1];
-    }
+  apiKeyInput.addEventListener("input", () => {
+    selectedModel = null;
+  });
 
-    async function callGemini(apiKey, base64Image) {
-        const modelName = await getWorkingModel(apiKey);
+  window.addEventListener("beforeunload", () => {
+    if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+  });
 
-        const systemPrompt = `تۆ پشکنەری رێنووسی زمانی کوردی سۆرانییت لە کەناڵی "رووداو".
-کارەکەت بریتییە لە دۆزینەوەی هەڵەی رێنووسی لەسەر تێکستی CG.
-
-یاساکانی رووداو:
-١. پیتەکانی (ڕ) و (ڵ) لە سەرەتای وشەدا قەدەغەیە، دەبێت بە پیتی (ر) بنووسرێن (وەک: رووداو، رێگە، رۆژ، راپۆرت).
-٢. پیتەکانی عەرەبی (ي، ك، ه لە شوێنی ە) قەدەغەیە، تەنیا پیتە کوردییەکان: (ی، ک، ە، ێ، ۆ، ڤ، گ، چ، پ، ژ).
-٣. پێشگری کردار (دە/دەست) و پاشگرەکان بەپێی ستانداردی رووداو بن.
-
-شێوازی وەڵامدانەوە (زۆر کورت):
-ئەگەر دروست بوو:
-سەدی سەد دروستە ✅
-
-ئەگەر هەڵەی تێدابوو:
-هەڵە: (وشە هەڵەکە) ⬅️ (وشە دروستەکە بەپێی رووداو)`;
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: systemPrompt },
-                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
-                    ]
-                }]
-            })
-        });
-
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        return data.candidates[0].content.parts[0].text;
-    }
-
-    function postProcessText(text) {
-        return text.replace(/\bڕ/g, "ر").replace(/ي/g, "ی").replace(/ك/g, "ک");
-    }
-
-    function displayLiveResult(text) {
-        resultText.innerText = text;
-        if (text.includes("سەدی سەد دروستە") || text.includes("✅")) {
-            bottomCard.className = "bottom-card status-clean";
-            statusBadge.innerText = "سەدی سەد دروستە ✅";
-        } else {
-            bottomCard.className = "bottom-card status-error";
-            statusBadge.innerText = "هەڵە هەیە ⚠️";
-        }
-    }
+  initCamera();
+})();
 </script>
-
 </body>
 </html>
