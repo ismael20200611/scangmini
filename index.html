@@ -1,0 +1,796 @@
+
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d16">
+<title>Rudaw CG Desk</title>
+
+<style>
+:root {
+  --bg:#080d16;
+  --panel:#111b2b;
+  --line:#293a52;
+  --text:#edf4ff;
+  --muted:#9aabc2;
+  --blue:#39bdf8;
+  --gold:#f4b942;
+  --green:#20c997;
+  --red:#ff5964;
+}
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  background:radial-gradient(circle at top,#172b46,transparent 45%),var(--bg);
+  color:var(--text);
+  font-family:Tahoma,Arial,sans-serif;
+}
+
+button,input,textarea { font:inherit; }
+
+.app {
+  max-width:1250px;
+  margin:auto;
+  padding:18px;
+}
+
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo {
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#f6b83f,#e87525);
+  color:#111;
+  display:grid;
+  place-items:center;
+  font-size:24px;
+  font-weight:bold;
+}
+
+h1 { font-size:25px;margin:0; }
+h2 { font-size:17px;margin:0 0 15px; }
+
+.subtitle {
+  color:var(--muted);
+  font-size:12px;
+  margin-top:5px;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:16px;
+}
+
+.panel {
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:16px;
+}
+
+button {
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:11px 15px;
+  background:#1a2a40;
+  color:white;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover { filter:brightness(1.2); }
+
+.primary {
+  background:var(--blue);
+  color:#04111b;
+  border-color:var(--blue);
+}
+
+.gold {
+  background:var(--gold);
+  color:#241600;
+}
+
+.danger {
+  background:#4a202a;
+  color:white;
+}
+
+button:disabled {
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+.tabs {
+  display:flex;
+  gap:8px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+
+.tab.active {
+  background:#12344b;
+  border-color:var(--blue);
+}
+
+textarea,input {
+  width:100%;
+  background:#081321;
+  border:1px solid #354961;
+  border-radius:10px;
+  color:white;
+  padding:13px;
+  outline:none;
+}
+
+textarea {
+  min-height:200px;
+  resize:vertical;
+  line-height:1.9;
+}
+
+label {
+  display:block;
+  margin:12px 0 7px;
+  font-size:13px;
+  color:#c4d3e6;
+}
+
+.row {
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.row button { flex:1; }
+
+.hint {
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.8;
+}
+
+.hidden { display:none!important; }
+
+.status {
+  background:#0b1624;
+  border-radius:9px;
+  padding:12px;
+  color:var(--muted);
+  font-size:13px;
+  margin:10px 0;
+}
+
+.result {
+  background:#0b1624;
+  border:1px solid var(--line);
+  border-right:4px solid var(--gold);
+  border-radius:10px;
+  padding:13px;
+  margin-top:9px;
+}
+
+.result.error { border-right-color:var(--red); }
+.result.clean { border-right-color:var(--green); }
+.result.info { border-right-color:var(--blue); }
+
+.wrong {
+  color:#ff9299;
+  text-decoration:line-through;
+}
+
+.right {
+  color:#6de4b9;
+  font-weight:bold;
+}
+
+video {
+  width:100%;
+  max-height:380px;
+  background:black;
+  border-radius:12px;
+}
+
+.camera-box {
+  background:#02060b;
+  border:1px solid var(--line);
+  border-radius:12px;
+  min-height:180px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+
+.dictionary-item,.history-item {
+  background:#0b1624;
+  border:1px solid var(--line);
+  padding:10px;
+  border-radius:9px;
+  margin-top:8px;
+}
+
+.dictionary-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+
+.history-item p {
+  color:var(--muted);
+  overflow-wrap:anywhere;
+}
+
+footer {
+  text-align:center;
+  color:#70839b;
+  font-size:11px;
+  padding:20px;
+}
+
+@media(max-width:800px) {
+  .grid { grid-template-columns:1fr; }
+  header { align-items:flex-start;flex-wrap:wrap; }
+  .app { padding:10px; }
+  .row button { min-width:100%; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <div class="brand">
+    <div class="logo">R</div>
+    <div>
+      <h1>Rudaw CG Desk</h1>
+      <div class="subtitle">
+        پشکنەری ڕێنووس و دەقی گرافیکی
+      </div>
+    </div>
+  </div>
+  <button id="exportBtn">هەناردەی ڕاپۆرت</button>
+</header>
+
+<div class="grid">
+
+<main>
+
+<section class="panel">
+<h2>پشکنینی دەقی CG</h2>
+
+<div class="tabs">
+<button class="tab active" data-tab="text">دەق</button>
+<button class="tab" data-tab="camera">کامێرا و OCR</button>
+</div>
+
+<div id="textTab">
+
+<label>دەقی کوردی سۆرانی</label>
+
+<textarea id="sourceText"
+placeholder="دەقی CG لێرە دابنێ..."></textarea>
+
+<div class="row">
+<button class="primary" id="checkBtn">پشکنین</button>
+<button id="clearTextBtn">پاککردنەوە</button>
+<button class="gold" id="copyBtn">کۆپیکردن</button>
+</div>
+
+<p class="hint">
+پشکنەر بە فەرهەنگ و یاساکانی خۆجێیی کار دەکات.
+هیچ API Key یان پارەدانێک پێویست نییە.
+</p>
+
+</div>
+
+<div id="cameraTab" class="hidden">
+
+<div class="camera-box">
+<video id="video" autoplay playsinline muted class="hidden"></video>
+<div id="cameraPlaceholder">
+کامێرا چالاک بکە
+</div>
+</div>
+
+<div class="row">
+<button class="primary" id="startCameraBtn">کردنەوەی کامێرا</button>
+<button id="stopCameraBtn" disabled>داخستن</button>
+</div>
+
+<label>هەڵبژاردنی وێنە</label>
+<input type="file" id="imageInput" accept="image/*">
+
+<div class="status" id="ocrStatus">
+OCR ئامادەیە.
+</div>
+
+<div class="row">
+<button class="gold" id="captureBtn" disabled>
+خوێندنەوەی فریم
+</button>
+<button id="ocrImageBtn" disabled>
+خوێندنەوەی وێنە
+</button>
+</div>
+
+<p class="hint">
+OCR بە Tesseract.js کار دەکات.
+زمانی Arabic + English بەکاردێت؛ وردیی کوردی سۆرانی دڵنیانەکراوە.
+</p>
+
+</div>
+</section>
+
+<section class="panel">
+
+<h2>ئەنجامی پشکنین</h2>
+
+<div class="status" id="summary">
+هێشتا پشکنین نەکراوە.
+</div>
+
+<div id="results"></div>
+
+<label>دەقی پێشنیارکراو</label>
+
+<textarea id="correctedText" readonly
+placeholder="ئەنجام لێرە دەردەکەوێت..."
+style="min-height:130px"></textarea>
+
+</section>
+
+<section class="panel">
+<h2>مێژووی پشکنین</h2>
+<div id="historyList"></div>
+</section>
+
+</main>
+
+<aside>
+
+<section class="panel">
+
+<h2>فەرهەنگی تایبەتی رووداو</h2>
+
+<p class="hint">
+وشەی نادروست و وشەی پەسەندکراو زیاد بکە.
+</p>
+
+<label>وشەی نادروست</label>
+<input id="wrongWord" type="text">
+
+<label>وشەی دروست</label>
+<input id="rightWord" type="text">
+
+<button class="primary" id="addRuleBtn"
+style="width:100%;margin-top:12px">
+زیادکردنی وشە
+</button>
+
+<div id="dictionaryList"></div>
+
+<button id="resetRulesBtn"
+style="width:100%;margin-top:12px">
+گەڕاندنەوەی فەرهەنگی بنەڕەتی
+</button>
+
+</section>
+
+<section class="panel">
+<h2>تایبەتمەندییەکان</h2>
+
+<div class="result info">
+<strong>١. پشکنینی ڕێنووس</strong>
+<p class="hint">یاساکانی فەرهەنگی خۆجێیی.</p>
+</div>
+
+<div class="result info">
+<strong>٢. ستانداردی رووداو</strong>
+<p class="hint">فەرهەنگی تایبەت و وشە پەسەندکراوەکان.</p>
+</div>
+
+<div class="result info">
+<strong>٣. مێژوو</strong>
+<p class="hint">پاراستنی پشکنینەکانی پێشوو لە وێبگەڕ.</p>
+</div>
+
+<div class="result info">
+<strong>٤. OCR</strong>
+<p class="hint">خوێندنەوەی دەقی وێنە و فریمی کامێرا.</p>
+</div>
+
+</section>
+</aside>
+
+</div>
+
+<footer>
+Rudaw CG Desk · Free Edition · HTML CSS JavaScript
+</footer>
+</div>
+
+<canvas id="captureCanvas" class="hidden"></canvas>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+const DEFAULT_RULES = [
+ ["ڕووداو","رووداو"],
+ ["ي","ی"],
+ ["ى","ی"],
+ ["ك","ک"],
+ ["ۀ","ە"]
+];
+
+let rules = load("rudaw_rules",DEFAULT_RULES);
+let history = load("rudaw_history",[]);
+let stream = null;
+let worker = null;
+let selectedImage = null;
+
+function load(key,fallback) {
+ try {
+   const value = JSON.parse(localStorage.getItem(key));
+   return Array.isArray(value) ? value : fallback.map(x=>x.slice());
+ } catch {
+   return fallback.map(x=>x.slice());
+ }
+}
+
+function save() {
+ localStorage.setItem("rudaw_rules",JSON.stringify(rules));
+ localStorage.setItem("rudaw_history",JSON.stringify(history.slice(0,30)));
+}
+
+function esc(value) {
+ return String(value).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function checkText() {
+
+ const source = $("sourceText").value;
+
+ if(!source.trim()) {
+  $("summary").textContent="تکایە دەق بنووسە.";
+  return;
+ }
+
+ let output = source
+  .replace(/ي/g,"ی")
+  .replace(/ى/g,"ی")
+  .replace(/ك/g,"ک")
+  .replace(/ۀ/g,"ە");
+
+ let found=[];
+
+ for(const [wrong,right] of rules) {
+
+  if(!wrong || !right || wrong===right) continue;
+
+  const escaped=wrong.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  const regex=new RegExp(escaped,"g");
+  const matches=output.match(regex);
+
+  if(matches) {
+   found.push({
+    wrong,
+    right,
+    count:matches.length
+   });
+
+   output=output.replace(regex,right);
+  }
+ }
+
+ $("correctedText").value=output;
+
+ $("summary").textContent=found.length
+ ? `${found.length} جۆر گۆڕانکاری دۆزرایەوە.`
+ : "هیچ یاسایەکی فەرهەنگ هەڵەیەکی نەدۆزییەوە. ئەمە بە مانای دروستی تەواوی دەق نییە.";
+
+ $("results").innerHTML=found.length
+ ? found.map(item=>`
+   <div class="result error">
+    <strong>
+     <span class="wrong">${esc(item.wrong)}</span>
+     ←
+     <span class="right">${esc(item.right)}</span>
+    </strong>
+    <small>${item.count} جار دۆزرایەوە.</small>
+   </div>
+ `).join("")
+ : `<div class="result clean">
+   پشکنینی یاساکان تەواو بوو.
+   </div>`;
+
+ history.unshift({
+  date:new Date().toLocaleString(),
+  source,
+  corrected:output,
+  issues:found.length
+ });
+
+ history=history.slice(0,30);
+ save();
+ renderHistory();
+}
+
+function renderRules() {
+ $("dictionaryList").innerHTML=rules.map((r,i)=>`
+  <div class="dictionary-item">
+   <span>${esc(r[0])} ← <b>${esc(r[1])}</b></span>
+   <button class="danger" data-delete="${i}">سڕینەوە</button>
+  </div>
+ `).join("");
+}
+
+function renderHistory() {
+ $("historyList").innerHTML=history.length
+ ? history.map((h,i)=>`
+  <div class="history-item">
+   <small>${esc(h.date)}</small>
+   <p>${esc(h.source.slice(0,150))}</p>
+   <button data-history="${i}">گەڕاندنەوە</button>
+  </div>
+ `).join("")
+ : "هێشتا مێژوو نییە.";
+}
+
+$("checkBtn").onclick=checkText;
+
+$("clearTextBtn").onclick=()=>{
+ $("sourceText").value="";
+ $("correctedText").value="";
+ $("results").innerHTML="";
+ $("summary").textContent="دەق پاککرایەوە.";
+};
+
+$("copyBtn").onclick=async()=>{
+ const text=$("correctedText").value;
+ if(!text) return alert("هیچ دەقێک نییە.");
+ try {
+  await navigator.clipboard.writeText(text);
+ } catch {
+  $("correctedText").select();
+  document.execCommand("copy");
+ }
+};
+
+$("addRuleBtn").onclick=()=>{
+ const wrong=$("wrongWord").value.trim();
+ const right=$("rightWord").value.trim();
+
+ if(!wrong || !right || wrong===right) {
+  alert("دوو وشەی جیاواز بنووسە.");
+  return;
+ }
+
+ const index=rules.findIndex(x=>x[0]===wrong);
+
+ if(index>=0) rules[index]=[wrong,right];
+ else rules.push([wrong,right]);
+
+ save();
+ renderRules();
+
+ $("wrongWord").value="";
+ $("rightWord").value="";
+};
+
+$("dictionaryList").onclick=e=>{
+ const btn=e.target.closest("[data-delete]");
+ if(!btn) return;
+
+ rules.splice(Number(btn.dataset.delete),1);
+ save();
+ renderRules();
+};
+
+$("resetRulesBtn").onclick=()=>{
+ if(confirm("فەرهەنگی بنەڕەتی بگەڕێنرێتەوە؟")) {
+  rules=DEFAULT_RULES.map(x=>x.slice());
+  save();
+  renderRules();
+ }
+};
+
+$("historyList").onclick=e=>{
+ const btn=e.target.closest("[data-history]");
+ if(!btn) return;
+
+ const item=history[Number(btn.dataset.history)];
+
+ $("sourceText").value=item.source;
+ $("correctedText").value=item.corrected;
+
+ document.querySelector('[data-tab="text"]').click();
+};
+
+$("exportBtn").onclick=()=>{
+ const report={
+  app:"Rudaw CG Desk",
+  history,
+  rules
+ };
+
+ const blob=new Blob(
+  [JSON.stringify(report,null,2)],
+  {type:"application/json"}
+ );
+
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+
+ a.href=url;
+ a.download="rudaw-cg-report.json";
+ a.click();
+
+ URL.revokeObjectURL(url);
+};
+
+document.querySelectorAll(".tab").forEach(tab=>{
+ tab.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(t=>
+   t.classList.toggle("active",t===tab)
+  );
+
+  $("textTab").classList.toggle("hidden",tab.dataset.tab!=="text");
+  $("cameraTab").classList.toggle("hidden",tab.dataset.tab!=="camera");
+ };
+});
+
+// FREE OCR USING TESSERACT.JS
+
+async function getWorker() {
+
+ if(worker) return worker;
+
+ $("ocrStatus").textContent="OCR library بار دەکرێت...";
+
+ if(!window.Tesseract) {
+  await new Promise((resolve,reject)=>{
+   const script=document.createElement("script");
+   script.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+   script.onload=resolve;
+   script.onerror=()=>reject(Error("Tesseract بارنەکرا."));
+   document.head.appendChild(script);
+  });
+ }
+
+ worker=await Tesseract.createWorker("ara+eng",1,{
+  logger:m=>{
+   if(m.status) {
+    $("ocrStatus").textContent=
+     m.status+" "+Math.round((m.progress||0)*100)+"%";
+   }
+  }
+ });
+
+ return worker;
+}
+
+async function recognize(image) {
+
+ try {
+
+  $("ocrStatus").textContent="دەق دەخوێندرێتەوە...";
+
+  const ocr=await getWorker();
+  const result=await ocr.recognize(image);
+  const text=(result.data.text||"").trim();
+
+  if(!text) {
+   $("ocrStatus").textContent="هیچ دەقێک نەدۆزرایەوە.";
+   return;
+  }
+
+  $("sourceText").value=text;
+  $("ocrStatus").textContent="خوێندنەوە تەواو بوو. دەقەکە پێداچوونەوە بکە.";
+
+  document.querySelector('[data-tab="text"]').click();
+  checkText();
+
+ } catch(error) {
+  $("ocrStatus").textContent="هەڵە: "+error.message;
+ }
+}
+
+$("imageInput").onchange=e=>{
+ selectedImage=e.target.files[0]||null;
+ $("ocrImageBtn").disabled=!selectedImage;
+};
+
+$("ocrImageBtn").onclick=()=>{
+ if(selectedImage) recognize(selectedImage);
+};
+
+$("startCameraBtn").onclick=async()=>{
+
+ try {
+
+  stream=await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:"environment"},
+   audio:false
+  });
+
+  $("video").srcObject=stream;
+  $("video").classList.remove("hidden");
+  $("cameraPlaceholder").classList.add("hidden");
+
+  $("startCameraBtn").disabled=true;
+  $("stopCameraBtn").disabled=false;
+  $("captureBtn").disabled=false;
+
+ } catch(error) {
+  $("ocrStatus").textContent="کێشەی کامێرا: "+error.message;
+ }
+
+};
+
+$("stopCameraBtn").onclick=()=>{
+ if(stream) stream.getTracks().forEach(t=>t.stop());
+
+ stream=null;
+ $("video").srcObject=null;
+ $("video").classList.add("hidden");
+ $("cameraPlaceholder").classList.remove("hidden");
+
+ $("startCameraBtn").disabled=false;
+ $("stopCameraBtn").disabled=true;
+ $("captureBtn").disabled=true;
+};
+
+$("captureBtn").onclick=()=>{
+ const video=$("video");
+ const canvas=$("captureCanvas");
+
+ if(!stream || !video.videoWidth) return;
+
+ canvas.width=video.videoWidth;
+ canvas.height=video.videoHeight;
+
+ canvas.getContext("2d").drawImage(video,0,0);
+
+ canvas.toBlob(blob=>{
+  if(blob) recognize(blob);
+ },"image/jpeg",0.92);
+};
+
+window.addEventListener("beforeunload",()=>{
+ if(stream) stream.getTracks().forEach(t=>t.stop());
+ if(worker) worker.terminate();
+});
+
+renderRules();
+renderHistory();
+
+</script>
+</body>
+</html>
