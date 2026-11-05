@@ -21,7 +21,7 @@
             flex-direction: column;
         }
 
-        /* بەشی سەرەوە (ڕێکخستن) */
+        /* بەشی سەرەوە */
         .top-bar {
             position: absolute;
             top: 0;
@@ -71,7 +71,7 @@
             object-fit: cover;
         }
 
-        /* چوارچێوەی ئامانج (وەک گۆگڵ ترانسلێت) */
+        /* چوارچێوەی ئامانج بۆ تێکستی CG */
         .scanner-frame {
             position: absolute;
             width: 85%;
@@ -93,7 +93,7 @@
             border-radius: 20px;
         }
 
-        /* بەشی ئەنجامی راستەوخۆ لە خوارەوە */
+        /* کارتی ئەنجام لە خوارەوە */
         .bottom-card {
             position: absolute;
             bottom: 20px;
@@ -181,13 +181,11 @@
 </head>
 <body>
 
-    <!-- بەشی سەرەوە -->
     <div class="top-bar">
         <h1>پشکنەری راستەوخۆ - رووداو</h1>
         <input type="password" id="apiKey" class="api-input" placeholder="Gemini API Key..." onchange="saveKey()">
     </div>
 
-    <!-- کامێرا -->
     <div class="camera-container">
         <video id="video" playsinline autoplay muted></video>
         <div class="scanner-frame">
@@ -195,13 +193,12 @@
         </div>
     </div>
 
-    <!-- دەرەنجامی راستەوخۆ -->
     <div class="bottom-card" id="bottomCard">
         <div class="card-header">
             <span class="badge" id="statusBadge">چاوەڕوانی کامێرا...</span>
             <div class="pulse-dot" id="pulseDot" style="display: none;"></div>
         </div>
-        <div class="result-text" id="resultText">مۆبایلەکەت بەرامبەر شاشەی CG ڕابگرە.</div>
+        <div class="result-text" id="resultText">مۆبایلەکەت بەرامبەر تێکستی CG ڕابگرە.</div>
         <div class="controls">
             <button class="btn btn-live" id="btnToggle" onclick="toggleScanner()">دەستپێکردنی پشکنینی راستەوخۆ</button>
         </div>
@@ -221,7 +218,6 @@
     const bottomCard = document.getElementById('bottomCard');
     const pulseDot = document.getElementById('pulseDot');
 
-    // هێنانی کلیل لە مۆبایلەکە
     document.addEventListener("DOMContentLoaded", () => {
         const savedKey = localStorage.getItem("rudaw_gemini_api_key");
         if (savedKey) document.getElementById("apiKey").value = savedKey;
@@ -233,7 +229,6 @@
         localStorage.setItem("rudaw_gemini_api_key", key);
     }
 
-    // کارپێکردنی کامێرای پشتەوە
     async function initCamera() {
         try {
             videoStream = await navigator.mediaDevices.getUserMedia({
@@ -269,7 +264,6 @@
         }
     }
 
-    // خولی پشکنینی بەردەوام (بە بێ وەستان تا دوگمەکە دابگریتەوە)
     async function runScannerLoop() {
         if (!isScanning) return;
 
@@ -290,13 +284,12 @@
             }
         }
 
-        // پشکنینی دووبارە پاش 1.5 چرکە لە تەواوبوونی پشکنینی پێشوو
+        // پشکنینی دووبارە پاش 1.5 چرکە
         if (isScanning) {
             setTimeout(runScannerLoop, 1500);
         }
     }
 
-    // بڕینی ئەو بەشەی ناو چوارچێوەکە تەنیا بۆ خێرایی زۆر
     function captureFrame() {
         const ctx = canvas.getContext('2d');
         canvas.width = 640;
@@ -305,7 +298,7 @@
         return canvas.toDataURL('image/jpeg', 0.65).split(',')[1];
     }
 
-    // پەیوەندی بە Gemini 1.5 Flash
+    // پەیوەندی بە مۆدێلە نوێیەکانی گووگڵ (بە پاڵپشتی ئۆتۆماتیکی بۆ نوێترین مۆدێل)
     async function callGeminiFlash(apiKey, base64Image) {
         const systemPrompt = `تۆ پشکنەری رێنووسی زمانی کوردی سۆرانییت لە کەناڵی "رووداو".
 کارەکەت بریتییە لە دۆزینەوەی هەڵەی رێنووسی لەسەر تێکستی CG.
@@ -322,24 +315,47 @@
 ئەگەر هەڵەی تێدابوو:
 هەڵە: (وشە هەڵەکە) ⬅️ (وشە دروستەکە بەپێی رووداو)`;
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // لیستی مۆدێلە نوێیەکان بەپێی ئەپدەیت (ئەگەر یەکیان 404 بوو ئەوی تر تاقی دەکاتەوە)
+        const models = [
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-exp',
+            'gemini-1.5-flash-latest'
+        ];
 
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: systemPrompt },
-                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
-                    ]
-                }]
-            })
-        });
+        let lastErr = null;
 
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message);
-        return data.candidates[0].content.parts[0].text;
+        for (const model of models) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: systemPrompt },
+                                { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await res.json();
+                if (data.error) {
+                    lastErr = new Error(data.error.message);
+                    continue; // بچۆ بۆ مۆدێلی دواتر
+                }
+
+                if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } catch (e) {
+                lastErr = e;
+            }
+        }
+
+        throw lastErr || new Error("مۆدێلەکە وەڵامی نەدایەوە، تکایە کلیلەکەت چێک بکە.");
     }
 
     function postProcessText(text) {
