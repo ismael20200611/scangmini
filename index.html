@@ -3,386 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>پشکنەری CG - شێوازی رووداو</title>
+    <title>پشکنەری راستەوخۆی CG - رووداو</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
 
         body {
-            background-color: #0b1120;
-            color: #f8fafc;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* بەشی سەرەوە (ڕێکخستن) */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            min-height: 100vh;
-            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .container {
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        header {
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #1e293b;
-        }
-
-        header h1 {
-            font-size: 1.4rem;
+        .top-bar h1 {
+            font-size: 0.95rem;
             color: #38bdf8;
-            margin-bottom: 4px;
         }
 
-        header p {
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-
-        /* بەشی کلیلی API */
-        .api-section {
-            background: #1e293b;
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .api-section label {
-            font-size: 0.8rem;
-            color: #cbd5e1;
-        }
-
-        .api-section input {
-            background: #0f172a;
+        .api-input {
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid #475569;
             color: #fff;
-            padding: 10px 12px;
+            padding: 4px 8px;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            width: 140px;
             direction: ltr;
         }
 
-        /* دوگمەی وێنەگرتن */
-        .btn-capture {
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            color: white;
-            border: none;
-            padding: 18px 24px;
-            border-radius: 12px;
-            font-size: 1.25rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        /* کامێرا بە پڕی شاشە */
+        .camera-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+        }
+
+        video {
             width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .btn-capture:active {
-            transform: scale(0.98);
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        /* بەشی پیشاندانی ئەنجام */
-        .result-box {
-            display: none;
-            padding: 18px;
+        /* چوارچێوەی ئامانج (وەک گۆگڵ ترانسلێت) */
+        .scanner-frame {
+            position: absolute;
+            width: 85%;
+            height: 35%;
+            border: 2px dashed #38bdf8;
             border-radius: 12px;
-            font-size: 1rem;
-            line-height: 1.6;
-            animation: fadeIn 0.3s ease;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-frame span {
+            background: rgba(0, 0, 0, 0.6);
+            color: #94a3b8;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* بەشی ئەنجامی راستەوخۆ لە خوارەوە */
+        .bottom-card {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            border: 2px solid #334155;
+            transition: all 0.3s ease;
         }
 
         .status-clean {
-            background-color: #064e3b;
-            border: 2px solid #10b981;
-            color: #ecfdf5;
+            border-color: #10b981 !important;
+            background: rgba(6, 78, 59, 0.95) !important;
         }
 
         .status-error {
-            background-color: #7f1d1d;
-            border: 2px solid #ef4444;
-            color: #fef2f2;
+            border-color: #ef4444 !important;
+            background: rgba(127, 29, 29, 0.95) !important;
         }
 
-        .status-badge {
-            font-size: 1.3rem;
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .badge {
             font-weight: bold;
-            margin-bottom: 8px;
-            display: block;
+            font-size: 1.1rem;
         }
 
-        .output-content {
-            white-space: pre-wrap;
-            font-size: 1.05rem;
-            word-break: break-word;
-        }
-
-        /* لۆدینگ */
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 4px solid #1e293b;
-            border-top: 4px solid #38bdf8;
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #38bdf8;
             border-radius: 50%;
-            width: 42px;
-            height: 42px;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px auto;
+            animation: pulse 1.2s infinite;
         }
 
-        .timer {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            margin-top: 6px;
+        .result-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 120px;
+            overflow-y: auto;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .btn-live {
+            background: #0284c7;
+            color: white;
+        }
+
+        .btn-live.active {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.5; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>پشکنەری CG - شێوازی رووداو</h1>
-        <p>پشکنینی خێرای رێنووس لە کەمتر لە ١٠ چرکەدا</p>
-    </header>
-
-    <!-- ڕێکخستنی کلیلی API -->
-    <div class="api-section">
-        <label for="apiKey">کلیلی Gemini API (تەنیا یەکەم جار دایبنێ):</label>
-        <input type="password" id="apiKey" placeholder="AIzaSy..." onchange="saveApiKey()">
+    <!-- بەشی سەرەوە -->
+    <div class="top-bar">
+        <h1>پشکنەری راستەوخۆ - رووداو</h1>
+        <input type="password" id="apiKey" class="api-input" placeholder="Gemini API Key..." onchange="saveKey()">
     </div>
 
-    <!-- دوگمەی کامێرا -->
-    <input type="file" id="fileInput" accept="image/*" capture="environment">
-    <button class="btn-capture" onclick="document.getElementById('fileInput').click()">
-        📷 وێنەی شاشەی CG بگرە
-    </button>
-
-    <!-- لۆدینگ لە کاتی پشکنیندا -->
-    <div class="loading" id="loadingBox">
-        <div class="spinner"></div>
-        <p id="loadingText">خەریکی شیکردنەوەیە بەپێی شێوازی رووداو...</p>
-        <div class="timer" id="timer">٠.٠ چرکە</div>
+    <!-- کامێرا -->
+    <div class="camera-container">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="scanner-frame">
+            <span>تێکستی CG بخەرە ئەم چوارچێوەیە</span>
+        </div>
     </div>
 
-    <!-- دەرەنجام -->
-    <div class="result-box" id="resultBox">
-        <div class="status-badge" id="statusBadge"></div>
-        <div class="output-content" id="outputContent"></div>
+    <!-- دەرەنجامی راستەوخۆ -->
+    <div class="bottom-card" id="bottomCard">
+        <div class="card-header">
+            <span class="badge" id="statusBadge">چاوەڕوانی کامێرا...</span>
+            <div class="pulse-dot" id="pulseDot" style="display: none;"></div>
+        </div>
+        <div class="result-text" id="resultText">مۆبایلەکەت بەرامبەر شاشەی CG ڕابگرە.</div>
+        <div class="controls">
+            <button class="btn btn-live" id="btnToggle" onclick="toggleScanner()">دەستپێکردنی پشکنینی راستەوخۆ</button>
+        </div>
     </div>
-</div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
 
 <script>
-    // هێنانی کلیلی پاشەکەوتکراو لە مۆبایلەکە
+    let isScanning = false;
+    let isProcessing = false;
+    let videoStream = null;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const btnToggle = document.getElementById('btnToggle');
+    const statusBadge = document.getElementById('statusBadge');
+    const resultText = document.getElementById('resultText');
+    const bottomCard = document.getElementById('bottomCard');
+    const pulseDot = document.getElementById('pulseDot');
+
+    // هێنانی کلیل لە مۆبایلەکە
     document.addEventListener("DOMContentLoaded", () => {
         const savedKey = localStorage.getItem("rudaw_gemini_api_key");
-        if (savedKey) {
-            document.getElementById("apiKey").value = savedKey;
-        }
+        if (savedKey) document.getElementById("apiKey").value = savedKey;
+        initCamera();
     });
 
-    function saveApiKey() {
+    function saveKey() {
         const key = document.getElementById("apiKey").value.trim();
         localStorage.setItem("rudaw_gemini_api_key", key);
     }
 
-    const fileInput = document.getElementById('fileInput');
-    fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // کارپێکردنی کامێرای پشتەوە
+    async function initCamera() {
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } },
+                audio: false
+            });
+            video.srcObject = videoStream;
+            statusBadge.innerText = "ئامادەیە بۆ پشکنین";
+        } catch (err) {
+            statusBadge.innerText = "هەڵە لە کامێرا";
+            resultText.innerText = "تکایە ڕێگە بە کامێرا بدە لە وێبگەڕەکەتدا.";
+        }
+    }
 
+    function toggleScanner() {
         const apiKey = document.getElementById("apiKey").value.trim();
         if (!apiKey) {
-            alert("تکایە سەرەتا کلیلی Gemini API لە سەرەوە دابنێ!");
+            alert("تکایە سەرەتا کلیلی API لە سەرەوە بنووسە!");
             return;
         }
 
-        startLoading();
-
-        try {
-            // بچووککردنەوەی وێنە بۆ خێرایی زۆر (بۆ ئەوەی بە کەمتر لە یەک چرکە بنێردرێت)
-            const base64Image = await compressImage(file, 900);
-            
-            // ناردن بۆ مۆدێلی گووگڵ
-            const resultText = await callGeminiFlash(apiKey, base64Image);
-            
-            // خاوێنکردنەوەی پیتەکان بەپێی رێنووسی رووداو
-            const cleanedText = postProcessText(resultText);
-            
-            showResult(cleanedText);
-        } catch (error) {
-            alert("کێشەیەک ڕوویدا:\n" + error.message);
-        } finally {
-            stopLoading();
-            fileInput.value = ""; // ئامادەکردنەوە بۆ وێنەی نوێ
+        isScanning = !isScanning;
+        if (isScanning) {
+            btnToggle.innerText = "وەستاندنی پشکنین";
+            btnToggle.classList.add("active");
+            pulseDot.style.display = "block";
+            runScannerLoop();
+        } else {
+            btnToggle.innerText = "دەستپێکردنی پشکنینی راستەوخۆ";
+            btnToggle.classList.remove("active");
+            pulseDot.style.display = "none";
+            statusBadge.innerText = "وەستێنراوە";
         }
-    });
-
-    // بچووککردنەوەی وێنە (Image Compression)
-    function compressImage(file, maxDimension) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onerror = reject;
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onerror = reject;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > maxDimension) {
-                            height *= maxDimension / width;
-                            width = maxDimension;
-                        }
-                    } else {
-                        if (height > maxDimension) {
-                            width *= maxDimension / height;
-                            height = maxDimension;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.75).split(',')[1]);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
     }
 
-    // پەیوەندی کردن بە گووگڵ جێمینای
+    // خولی پشکنینی بەردەوام (بە بێ وەستان تا دوگمەکە دابگریتەوە)
+    async function runScannerLoop() {
+        if (!isScanning) return;
+
+        if (!isProcessing) {
+            isProcessing = true;
+            statusBadge.innerText = "خەریکی پشکنینە...";
+            
+            try {
+                const base64Image = captureFrame();
+                const apiKey = document.getElementById("apiKey").value.trim();
+                const result = await callGeminiFlash(apiKey, base64Image);
+                const cleaned = postProcessText(result);
+                displayLiveResult(cleaned);
+            } catch (error) {
+                resultText.innerText = error.message;
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // پشکنینی دووبارە پاش 1.5 چرکە لە تەواوبوونی پشکنینی پێشوو
+        if (isScanning) {
+            setTimeout(runScannerLoop, 1500);
+        }
+    }
+
+    // بڕینی ئەو بەشەی ناو چوارچێوەکە تەنیا بۆ خێرایی زۆر
+    function captureFrame() {
+        const ctx = canvas.getContext('2d');
+        canvas.width = 640;
+        canvas.height = 360;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.65).split(',')[1];
+    }
+
+    // پەیوەندی بە Gemini 1.5 Flash
     async function callGeminiFlash(apiKey, base64Image) {
         const systemPrompt = `تۆ پشکنەری رێنووسی زمانی کوردی سۆرانییت لە کەناڵی "رووداو".
-کارەکەت بریتییە لە دۆزینەوەی هەڵەی رێنووسی لەسەر شاشەی مۆنیتەری کۆنتڕۆڵ رووم (CG Preview).
+کارەکەت بریتییە لە دۆزینەوەی هەڵەی رێنووسی لەسەر تێکستی CG.
 
-یاسا زۆر توندەکانی رووداو:
-١. لە شێوازی رووداو پیتەکانی (ڕ) و (ڵ) بە هیچ جۆرێک لە سەرەتای وشە نانووسرێن، بەڵکو دەبێت بە پیتی (ر) بنووسرێن (وەک: رووداو، رێگە، رۆژ، راپۆرت نەک ڕووداو یان ڕێگە).
-٢. پیتەکانی عەرەبی قەدەغەیە (ي، ك، ه لە شوێنی ە). تەنیا پیتە کوردییەکان بەکاردێن: (ی، ک، ە، ێ، ۆ، ڤ، گ، چ، پ، ژ).
-٣. وشەکان بە کوردی بن (بۆ نموونە: ئادەم دروستە، نەک ئادهم).
-٤. رێنووسی ژمارەکان و ناوی کەسایەتی و شوێنەکان بەپێی ستانداردی رووداو بێت.
+یاساکانی رووداو:
+١. پیتەکانی (ڕ) و (ڵ) لە سەرەتای وشەدا قەدەغەیە، دەبێت بە پیتی (ر) بنووسرێن (وەک: رووداو، رێگە، رۆژ، راپۆرت).
+٢. پیتەکانی عەرەبی (ي، ك، ه لە شوێنی ە) قەدەغەیە، تەنیا پیتە کوردییەکان: (ی، ک، ە، ێ، ۆ، ڤ، گ، چ، پ، ژ).
+٣. پێشگری کردار (دە/دەست) و پاشگرەکان بەپێی ستانداردی رووداو بن.
 
-شێوازی وەڵامدانەوە:
-ئەگەر هیچ هەڵەیەکی نەبوو، تەنیا ئەم رستەیە بنووسە:
+شێوازی وەڵامدانەوە (زۆر کورت):
+ئەگەر دروست بوو:
 سەدی سەد دروستە ✅
 
-ئەگەر هەڵەی تێدابوو، زۆر کورت بەم شێوەیە بنووسە:
-هەڵە هەیە ⚠️
-دەقی دروست: (تێکستی دروستکراو بەپێی رووداو)
-هەڵەکان:
-- (وشە هەڵەکە) ⬅️ (وشە دروستەکە)`;
+ئەگەر هەڵەی تێدابوو:
+هەڵە: (وشە هەڵەکە) ⬅️ (وشە دروستەکە بەپێی رووداو)`;
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-        const response = await fetch(url, {
+        const res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
                     parts: [
                         { text: systemPrompt },
-                        {
-                            inlineData: {
-                                mimeType: "image/jpeg",
-                                data: base64Image
-                            }
-                        }
+                        { inlineData: { mimeType: "image/jpeg", data: base64Image } }
                     ]
                 }]
             })
         });
 
-        const data = await response.json();
-
-        // دەستنیشانکردنی دەقی هەڵەکە ئەگەر ڕوویدا
-        if (data.error) {
-            throw new Error(`گووگڵ دەڵێت: ${data.error.message} (کۆد: ${data.error.code})`);
-        }
-
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            throw new Error("وەڵام نەگەڕایەوە لە گووگڵەوە، تکایە کلیلەکەت چێک بکەرەوە.");
-        }
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.candidates[0].content.parts[0].text;
     }
 
-    // فلتەری زیاتری کۆد بەپێی شێوازی رووداو
     function postProcessText(text) {
-        return text
-            .replace(/\bڕ/g, "ر") // هەر پیتێکی ڕ لە سەرەتای وشەدا بێت دەیکاتە ر
-            .replace(/ي/g, "ی")
-            .replace(/ك/g, "ک");
+        return text.replace(/\bڕ/g, "ر").replace(/ي/g, "ی").replace(/ك/g, "ک");
     }
 
-    // پیشاندانی ئەنجام
-    function showResult(text) {
-        const resultBox = document.getElementById("resultBox");
-        const statusBadge = document.getElementById("statusBadge");
-        const outputContent = document.getElementById("outputContent");
-
-        resultBox.style.display = "block";
-
+    function displayLiveResult(text) {
+        resultText.innerText = text;
         if (text.includes("سەدی سەد دروستە") || text.includes("✅")) {
-            resultBox.className = "result-box status-clean";
+            bottomCard.className = "bottom-card status-clean";
             statusBadge.innerText = "سەدی سەد دروستە ✅";
-            outputContent.innerText = "تێکستەکە پاکە و بەپێی رێنووسی رووداوە، دەتوانیت بیخەیتە سەر هەوا.";
         } else {
-            resultBox.className = "result-box status-error";
+            bottomCard.className = "bottom-card status-error";
             statusBadge.innerText = "هەڵە هەیە ⚠️";
-            outputContent.innerText = text;
         }
-    }
-
-    // بەڕێوەبردنی کات
-    let timerInterval;
-    let startTime;
-
-    function startLoading() {
-        document.getElementById("loadingBox").style.display = "block";
-        document.getElementById("resultBox").style.display = "none";
-        startTime = Date.now();
-        timerInterval = setInterval(() => {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-            document.getElementById("timer").innerText = `${elapsed} چرکە`;
-        }, 100);
-    }
-
-    function stopLoading() {
-        document.getElementById("loadingBox").style.display = "none";
-        clearInterval(timerInterval);
     }
 </script>
 
